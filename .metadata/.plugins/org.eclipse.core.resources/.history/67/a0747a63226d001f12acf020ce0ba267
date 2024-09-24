@@ -1,0 +1,31 @@
+package com.example.holidayCalculate.service;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
+import java.time.LocalDate;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+@SpringBootTest
+@ActiveProfiles("test") // Используйте профиль для тестовой конфигурации, если это необходимо
+public class HolidayServiceTest {
+
+    @Autowired
+    private HolidayService holidayService;
+
+    @Test
+    public void testIsWorkingDay_Holiday() {
+        LocalDate holiday = LocalDate.of(2024, 12, 25);
+        assertFalse(holidayService.isWorkingDay(holiday), "25 декабря 2024 года должно быть праздничным днем");
+    }
+
+    @Test
+    public void testIsWorkingDay_Workday() {
+        LocalDate workday = LocalDate.of(2024, 12, 26);
+        assertTrue(holidayService.isWorkingDay(workday), "26 декабря 2024 года должно быть рабочим днем");
+    }
+}

@@ -1,0 +1,5 @@
+package com.example.holidayCalculate.dto;
+
+public class VacationPayResponse {
+
+}

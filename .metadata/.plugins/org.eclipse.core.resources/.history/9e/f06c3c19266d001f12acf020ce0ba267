@@ -1,0 +1,76 @@
+package com.example.holidayCalculate.controller;
+
+import com.example.holidayCalculate.service.HolidayService;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.time.LocalDate;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@WebMvcTest(HolidayCalculatorController.class)
+public class HolidayCalculatorControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
+    private HolidayService holidayService;
+
+    @Test
+    public void testCalculateVacationPay_ValidRequest() throws Exception {
+        Mockito.when(holidayService.isWorkingDay(any(LocalDate.class))).thenReturn(true);
+
+        mockMvc.perform(get("/calculate")
+                .param("averageSalary", "50000")
+                .param("vacationDays", "14")
+                .param("vacationDates", "2024-12-31"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.Общая сумма отпускных").exists())
+                .andExpect(jsonPath("$.Количество оплачиваемых дней").value(14));
+    }
+
+    @Test
+    public void testCalculateVacationPay_NoVacationDates() throws Exception {
+        mockMvc.perform(get("/calculate")
+                .param("averageSalary", "50000")
+                .param("vacationDays", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.Общая сумма отпускных").exists())
+                .andExpect(jsonPath("$.Количество оплачиваемых дней").value(10));
+    }
+
+    @Test
+    public void testCalculateVacationPay_InvalidSalary() throws Exception {
+        mockMvc.perform(get("/calculate")
+                .param("averageSalary", "-100")
+                .param("vacationDays", "10"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.Ошибка").value("Средняя зарплата и количество отпускных дней должны быть положительными."));
+    }
+
+    @Test
+    public void testCalculateVacationPay_MissingRequiredParameters() throws Exception {
+        mockMvc.perform(get("/calculate")
+                .param("vacationDays", "10"))  // Нет параметра averageSalary
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.Ошибка").value("Средняя зарплата и количество отпускных дней обязательны для заполнения."));
+    }
+
+    @Test
+    public void testCalculateVacationPay_InvalidDateFormat() throws Exception {
+        mockMvc.perform(get("/calculate")
+                .param("averageSalary", "50000")
+                .param("vacationDays", "10")
+                .param("vacationDates", "invalid-date"))  // Некорректная дата
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.Ошибка").value("Некорректный формат даты."));
+    }
+}

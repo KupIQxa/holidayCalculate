@@ -1,0 +1,56 @@
+package com.example.holidayCalculate.controller;
+
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class HolidayCalculatorController {
+    
+    @GetMapping("/calculate")
+    public double calculateVacationPay(@RequestParam double averageSalary, @RequestParam int vacationDays, 
+                                       @RequestParam(required = false) List<String> vacationDates) {
+        double dailyRate = averageSalary / 29.3; 
+        if (vacationDates == null || vacationDates.isEmpty()) {
+            return dailyRate * vacationDays;
+        } else {
+            List<LocalDate> dates = vacationDates.stream()
+                                    .map(LocalDate::parse)
+                                    .collect(Collectors.toList());
+            long paidDays = calculatePaidDays(dates);
+            return dailyRate * paidDays;
+        }
+    }
+
+
+    private long calculatePaidDays(List<LocalDate> vacationDates) {
+        return vacationDates.stream()
+                .filter(this::isWorkingDay)
+                .count();
+    }
+
+
+    private boolean isWorkingDay(LocalDate date) {
+        return !(isWeekend(date) || isHoliday(date));
+    }
+
+
+    private boolean isWeekend(LocalDate date) {
+        DayOfWeek day = date.getDayOfWeek();
+        return day == DayOfWeek.SATURDAY || day == DayOfWeek.SUNDAY;
+    }
+
+
+    private boolean isHoliday(LocalDate date) {
+        List<LocalDate> holidays = List.of(
+            LocalDate.of(2024, 1, 1),  
+            LocalDate.of(2024, 5, 9)   
+        );
+        return holidays.contains(date);
+    }
+}

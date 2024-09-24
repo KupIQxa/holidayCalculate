@@ -1,0 +1,35 @@
+package com.example.holidayCalculate.controller;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class HolidayCalculatorController {
+	
+	@GetMapping("/calculate")
+	public double calculateVacationPay(@RequestParam double averageSalary, @RequestParam int vacationDays, 
+	                                   @RequestParam(required = false) List<String> vacationDates) {
+	    double dailyRate = averageSalary / 29.3;
+	    if (vacationDates == null || vacationDates.isEmpty()) {
+	        return dailyRate * vacationDays;
+	    } else {
+	        long paidDays = calculatePaidDays(vacationDates);
+	        return dailyRate * paidDays;
+	    }
+	}
+
+	private long calculatePaidDays(List<String> vacationDates) {
+	    // Логика расчёта оплачиваемых дней с учетом праздников и выходных
+	    // Это предполагает обработку дат и проверку, являются ли они рабочими днями
+	    return vacationDates.stream()
+	        .filter(this::isWorkingDay)
+	        .count();
+	}
+
+	private boolean isWorkingDay(String date) {
+	    // Пример проверки рабочего дня
+	    // Можно использовать Java 8 DateTime API и список праздников
+	    return true;
+	}
+}
